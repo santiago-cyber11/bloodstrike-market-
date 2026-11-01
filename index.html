@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BS Market — Compra y venta de cuentas Blood Strike</title>
+<style>
+:root{
+  --bg:#0b0d12; --bg2:#131821; --bg3:#1a212d; --line:#242c3a;
+  --txt:#e8eef7; --dim:#8b95a7; --acc:#ff3b30; --acc2:#ff7a45; --ok:#22c55e; --warn:#f59e0b;
+  --r:14px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{
+  margin:0;background:radial-gradient(1200px 600px at 50% -240px,#1d2433 0%,var(--bg) 60%);
+  color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;
+}
+h1,h2,h3{margin:0;line-height:1.2}
+a{color:var(--acc2)}
+
+/* ---------- NAV ---------- */
+.nav{
+  position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:16px;
+  padding:12px 20px;background:rgba(11,13,18,.85);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);flex-wrap:wrap;
+}
+.brand{font-weight:800;font-size:1.15rem;letter-spacing:.3px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.brand .drop{filter:drop-shadow(0 0 8px rgba(255,59,48,.8))}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cur-wrap{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--dim)}
+.cur-wrap select{
+  background:var(--bg3);color:var(--txt);border:1px solid var(--line);
+  border-radius:10px;padding:8px 10px;font-size:.85rem;font-weight:600;cursor:pointer;
+}
+
+/* ---------- BOTONES ---------- */
+.btn{
+  background:var(--bg3);color:var(--txt);border:1px solid var(--line);
+  padding:9px 15px;border-radius:10px;font-size:.87rem;font-weight:600;
+  cursor:pointer;transition:.15s;font-family:inherit;
+}
+.btn:hover{background:#222b3a;transform:translateY(-1px)}
+.btn.primary{background:linear-gradient(135deg,var(--acc),var(--acc2));border:0;color:#fff}
+.btn.primary:hover{filter:brightness(1.1)}
+.btn.ghost{background:transparent}
+.btn.danger{color:#ff8a80;border-color:#4a2222;background:#2a1414}
+.btn.full{width:100%;padding:12px;margin-top:6px}
+.btn.sm{padding:6px 10px;font-size:.78rem}
+
+/* ---------- LAYOUT ---------- */
+main{max-width:1180px;margin:0 auto;padding:26px 20px 70px}
+.hero{text-align:center;padding:24px 0 30px}
+.hero h1{font-size:clamp(1.6rem,4vw,2.5rem);background:linear-gradient(90deg,#fff,#ffb199);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p{color:var(--dim);margin:10px auto 0;max-width:560px;font-size:.95rem}
+
+/* ---------- FILTROS ---------- */
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:10px;margin-bottom:22px}
+.filters input,.filters select{
+  background:var(--bg2);border:1px solid var(--line);color:var(--txt);
+  padding:11px 13px;border-radius:11px;font-size:.88rem;font-family:inherit;width:100%;
+}
+.filters input:focus,.filters select:focus{outline:2px solid var(--acc);outline-offset:-1px}
+@media(max-width:760px){.filters{grid-template-columns:1fr 1fr}}
+
+/* ---------- GRID / CARDS ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(268px,1fr));gap:16px}
+.card{
+  background:linear-gradient(180deg,var(--bg2),#10151d);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;
+  transition:.18s;
+}
+.card:hover{transform:translateY(-3px);border-color:#3a4considerable}
+.card:hover{border-color:#39445a;box-shadow:0 12px 30px -18px #000}
+.thumb{height:132px;background-size:cover;background-position:center;background-color:#0f141c}
+.thumb.ph{display:grid;place-items:center;font-size:2.4rem;opacity:.5}
+.card-body{padding:14px;display:flex;flex-direction:column;gap:9px;flex:1}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{font-size:.7rem;font-weight:700;padding:3px 9px;border-radius:999px;background:#222b3a;color:#a9b6ca;text-transform:uppercase;letter-spacing:.4px}
+.badge.leyenda{background:#3a1d0c;color:#ffb066;border:1px solid #6b3a12}
+.badge.maestro{background:#2a1240;color:#c49bff;border:1px solid #4d2270}
+.badge.diamante{background:#0d2a3a;color:#6fd6ff;border:1px solid #1c4d66}
+.card h3{font-size:.98rem;font-weight:700}
+.desc{color:var(--dim);font-size:.82rem;line-height:1.45;margin:0;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:6px}
+.price{font-weight:800;font-size:1.05rem;color:#fff;display:flex;flex-direction:column}
+.price small{font-size:.68rem;color:var(--dim);font-weight:500}
+.empty{color:var(--dim);text-align:center;padding:50px 0;grid-column:1/-1}
+
+/* ---------- PANELES / FORMULARIOS ---------- */
+.panel{
+  max-width:560px;margin:0 auto;background:var(--bg2);border:1px solid var(--line);
+  border-radius:18px;padding:26px;
+}
+.panel h2{font-size:1.35rem;margin-bottom:6px}
+.hint{color:var(--dim);font-size:.82rem;margin:0 0 16px}
+.fld{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.fld span{font-size:.78rem;color:var(--dim);font-weight:600;letter-spacing:.3px}
+.fld input,.fld select,.fld textarea{
+  background:var(--bg3);border:1px solid var(--line);color:var(--txt);
+  padding:11px 13px;border-radius:10px;font-size:.9rem;font-family:inherit;width:100%;
+}
+.fld input:focus,.fld select:focus,.fld textarea:focus{outline:2px solid var(--acc);outline-offset:-1px}
+.fld textarea{resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.row2{grid-template-columns:1fr}}
+.tabs{display:flex;gap:8px;margin-bottom:20px;background:var(--bg3);padding:5px;border-radius:12px}
+.tab{flex:1;background:transparent;border:0;color:var(--dim);padding:9px;border-radius:9px;
+  font-family:inherit;font-size:.88rem;font-weight:700;cursor:pointer}
+.tab.active{background:var(--bg2);color:var(--txt);box-shadow:0 2px 8px -4px #000}
+.err{color:#ff8a80;font-size:.82rem;margin:0 0 10px;min-height:1em}
+
+/* ---------- MODAL ---------- */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.72);display:grid;place-items:center;
+  padding:20px;z-index:100;backdrop-filter:blur(4px)}
+.modal-box{background:var(--bg2);border:1px solid var(--line);border-radius:18px;
+  max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:24px;position:relative}
+.modal-close{position:absolute;top:12px;right:12px;background:var(--bg3);border:1px solid var(--line);
+  color:var(--txt);width:32px;height:32px;border-radius:9px;cursor:pointer;font-size:1rem}
+.kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:.87rem}
+.kv span:first-child{color:var(--dim)}
+.note{background:#1a2432;border-left:3px solid var(--warn);padding:11px 13px;border-radius:8px;
+  font-size:.8rem;color:#c9d4e2;margin:14px 0}
+.note.ok{background:#12261a;border-left-color:var(--ok)}
+
+/* ---------- TOAST ---------- */
+#toasts{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.toast{background:var(--bg3);border:1px solid var(--line);padding:11px 18px;border-radius:11px;
+  font-size:.85rem;font-weight:600;box-shadow:0 10px 30px -12px #000;animation:in .2s}
+.toast.ok{border-color:#1e4d2e;background:#12261a;color:#8be0a8}
+.toast.err{border-color:#5a2323;background:#2a1414;color:#ff9a92}
+@keyframes in{from{opacity:0;transform:translateY(8px)}}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="brand" data-view="market"><span class="drop">🩸</span> BS Market</div>
+  <div class="nav-right">
+    <label class="cur-wrap">Divisa <select id="selCurrency"></select></label>
+    <button class="btn ghost" data-view="mine">Mis ventas</button>
+    <button class="btn primary" data-view="publish">+ Publicar cuenta</button>
+    <button class="btn" id="navAuth">Iniciar sesión</button>
+  </div>
+</header>
+
+<main>
+  <!-- ============ MERCADO ============ -->
+  <section id="view-market">
+    <div class="hero">
+      <h1>Compra y vende cuentas de Blood Strike</h1>
+      <p>Rangos altos, skins exclusivas y publicación gratis. Los precios se convierten a tu divisa al instante.</p>
+    </div>
+    <div class="filters">
+      <input id="fQ" placeholder="Buscar cuenta, rango o skin…">
+      <select id="fRank"><option value="">Todos los rangos</option></select>
+      <select id="fSort">
+        <option value="recent">Más recientes</option>
+        <option value="priceAsc">Menor precio</option>
+        <option value="priceDesc">Mayor precio</option>
+      </select>
+      <input id="fMax" type="number" min="0" placeholder="Precio máx.">
+    </div>
+    <div id="grid" class="grid"></div>
+  </section>
+
+  <!-- ============ LOGIN / REGISTRO ============ -->
+  <section id="view-auth" hidden>
+    <div class="panel">
+      <div class="tabs">
+        <button class="tab active" data-tab="login" type="button">Iniciar sesión</button>
+        <button class="tab" data-tab="register" type="button">Crear cuenta</button>
+      </div>
+      <form id="formAuth">
+        <label class="fld"><span>Correo electrónico</span>
+          <input type="email" id="aEmail" required autocomplete="email" placeholder="tu@correo.com">
+        </label>
+        <label class="fld" id="fldName" hidden><span>Nombre de usuario</span>
+          <input id="aName" placeholder="KillerMX" autocomplete="nickname">
+        </label>
+        <label class="fld"><span>Contraseña</span>
+          <input type="password" id="aPass" required minlength="6" autocomplete="current-password" placeholder="Mínimo 6 caracteres">
+        </label>
+        <p class="err" id="aErr"></p>
+        <button class="btn primary full" type="submit" id="aSubmit">Entrar</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ PUBLICAR ============ -->
+  <section id="view-publish" hidden>
+    <div class="panel">
+      <h2>Publicar mi cuenta</h2>
+      <p class="hint">El precio se guarda en USD y se muestra convertido a la divisa de cada visitante.</p>
+      <form id="formPub">
+        <label class="fld"><span>Título del anuncio</span>
+          <input id="pTitle" maxlength="80" required placeholder="Cuenta Leyenda · 68 skins · AK legendaria">
+        </label>
+        <div class="row2">
+          <label class="fld"><span>Precio (<b id="pubCur">USD</b>)</span>
+            <input id="pPrice" type="number" min="0.5" step="0.01" required placeholder="99.00">
+          </label>
+          <label class="fld"><span>Rango</span><select id="pRank"></select></label>
+        </div>
+        <div class="row2">
+          <label class="fld"><span>Nivel</span><input id="pLevel" type="number" min="1" value="1"></label>
+          <label class="fld"><span>Nº de skins</span><input id="pSkins" type="number" min="0" value="0"></label>
+        </div>
+        <label class="fld"><span>Descripción</span>
+          <textarea id="pDesc" rows="4" maxlength="600" placeholder="Temporadas jugadas, skins destacadas, método de vinculación…"></textarea>
+        </label>
+        <label class="fld"><span>Contacto (WhatsApp / Discord)</span>
+          <input id="pContact" required placeholder="discord: usuario#0000">
+        </label>
+        <label class="fld"><span>Imagen del inventario (URL, opcional)</span>
+          <input id="pImg" type="url" placeholder="https://…">
+        </label>
+        <p class="err" id="pErr"></p>
+        <button class="btn primary full" type="submit">Publicar anuncio</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ MIS VENTAS ============ -->
+  <section id="view-mine" hidden>
+    <div class="panel" style="max-width:760px">
+      <h2>Mis publicaciones</h2>
+      <p class="hint">Gestiona, marca como vendida o elimina tus cuentas publicadas.</p>
+      <div id="mineList" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+  </section>
+</main>
+
+<div id="modal" class="modal" hidden></div>
+<div id="toasts"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= CONFIGURACIÓN ================= */
+// Tasas de cambio respecto a USD (en producción: pídelas a una API cada ~1h)
+const RATES = { USD:1, EUR:0.92, MXN:17.35, COP:3980, ARS:990, BRL:5.45, PEN:3.78, CLP:945, UYU:39.8 };
+const CUR   = { USD:'$', EUR:'€', MXN:'MX$', COP:'COL$', ARS:'AR$', BRL:'R$', PEN:'S/', CLP:'CLP$', UYU:'$U' };
+const RANKS = ['Bronce','Plata','Oro','Platino','Diamante','Maestro','Leyenda'];
+const ZERO_DEC = ['COP','CLP','ARS','UYU'];
+
+/* ================= ALMACENAMIENTO ================= */
+const K = { USERS:'bsm_users', LISTS:'bsm_listings', SESS:'bsm_session', CUR:'bsm_currency' };
+const store = {
+  get(k, def){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : def; }catch(e){ return def; } },
+  set(k, v){ localStorage.setItem(k, JSON.stringify(v)); }
+};
+
+/* ================= ESTADO ================= */
+const state = { user:null, currency:'USD', view:'market', authTab:'login' };
+
+const $  = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+
+/* ================= DINERO / DIVISAS ================= */
+function money(usd){
+  const cur = state.currency;
+  const n = usd * RATES[cur];
+  const dec = ZERO_DEC.indexOf(cur) >= 0 ? 0 : 2;
+  const num = new Intl.NumberFormat('es-ES',{ minimumFractionDigits:dec, maximumFractionDigits:dec }).format(n);
+  return CUR[cur] + ' ' + num;
+}
+function usdLabel(usd){
+  if (state.currency === 'USD') return '';
+  return '≈ $' + usd.toFixed(2) + ' USD';
+}
+
+/* ================= SEGURIDAD (demo) ================= */
+// DEMO: hash SHA-256. En producción usa bcrypt/argon2 EN EL SERVIDOR.
+async function hashPassword(pw){
+  const data = pw + '::bsm_salt';
+  if (window.crypto && window.crypto.subtle){
+    try{
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+    }catch(e){ /* fallback */ }
+  }
+  let h = 5381;
+  for (let i=0;i<data.length;i++) h = ((h << 5) + h + data.charCodeAt(i)) >>> 0;
+  return 'djb2_' + h.toString(16);
+}
+
+/* ================= DATOS INICIALES ================= */
+function seed(){
+  const now = Date.now();
+  return [
+    { id:'l1', sellerId:'demo', sellerName:'KillerMX', title:'Cuenta Leyenda · 68 skins · AK legendaria',
+      desc:'Main desde la temporada 2. Skins de AK, M4 y cuchillo dorado. Vinculada solo a correo, sin redes sociales.',
+      priceUsd:189, rank:'Leyenda', level:62, skins:68, contact:'discord: killermx#2210', img:'',
+      createdAt: now - 36e5, sold:false },
+    { id:'l2', sellerId:'demo', sellerName:'NoobSlayer', title:'Cuenta Diamante fresca · 12 skins',
+      desc:'Cuenta secundaria, rango Diamante, lista para ranked. Sin historial de sanciones.',
+      priceUsd:45, rank:'Diamante', level:34, skins:12, contact:'wa.me/5215500000000', img:'',
+      createdAt: now - 72e5, sold:false },
+    { id:'l3', sellerId:'demo', sellerName:'BloodKing', title:'Maestro con pase de batalla completo',
+      desc:'Todas las recompensas del pase de las 3 últimas temporadas + skins de evento.',
+      priceUsd:99, rank:'Maestro', level:48, skins:31, contact:'discord: bloodking', img:'',
+      createdAt: now - 108e5, sold:false },
+    { id:'l4', sellerId:'demo', sellerName:'ZombieHunter', title:'Pack Oro + 8 skins barato',
+      desc:'Ideal para empezar a jugar ranked sin gastar de más.',
+      priceUsd:19.5, rank:'Oro', level:22, skins:8, contact:'discord: zombie#0001', img:'',
+      createdAt: now - 144e5, sold:false }
+  ];
+}
+
+let users = [], listings = [];
+
+function loadAll(){
+  users = store.get(K.USERS, []);
+  listings = store.get(K.LISTS, null);
+  if (!listings || !listings.length){ listings = seed(); store.set(K.LISTS, listings); }
+  const savedCur = store.get(K.CUR, 'USD');
+  state.currency = RATES[savedCur] ? savedCur : 'USD';
+  const sid = store.get(K.SESS, null);
+  state.user = users.filter(u => u.id === sid)[0] || null;
+}
+function saveUsers(){ store.set(K.USERS, users); }
+function saveListings(){ store.set(K.LISTS, listings); }
+
+/* ================= TOASTS ================= */
+function toast(msg, type){
+  const el = document.createElement('div');
+  el.className = 'toast ' + (type || '');
+  el.textContent = msg;
+  $('#toasts').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition = '.3s'; }, 2200);
+  setTimeout(() => el.remove(), 2600);
+}
+
+/* ================= NAVEGACIÓN ================= */
+function showView(v){
+  if ((v === 'publish' || v === 'mine') && !state.user){
+    toast('Inicia sesión para continuar', 'err');
+    v = 'auth';
+  }
+  state.view = v;
+  ['market','auth','publish','mine'].forEach(x => {
+    document.getElementById('view-' + x).hidden = (x !== v);
+  });
+  if (v === 'publish') $('#pubCur').textContent = state.currency;
+  if (v === 'mine') renderMine();
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ================= NAVBAR ================= */
+function renderNav(){
+  const sel = $('#selCurrency');
+  sel.value = state.currency;
+  const b = $('#navAuth');
+  if (state.user){
+    b.textContent = '⏻ ' + state.user.name;
+    b.onclick = () => {
+      store.set(K.SESS, null);
+      state.user = null;
+      renderNav(); renderMarket(); renderMine();
+      toast('Sesión cerrada');
+      showView('market');
+    };
+  } else {
+    b.textContent = 'Iniciar sesión';
+    b.onclick = () => showView('auth');
+  }
+}
+
+/* ================= MERCADO ================= */
+function getFiltered(){
+  const q    = $('#fQ').value.trim().toLowerCase();
+  const rank = $('#fRank').value;
+  const sort = $('#fSort').value;
+  const maxRaw = parseFloat($('#fMax').value);
+  const maxUsd = isNaN(maxRaw) ? null : maxRaw / RATES[state.currency];
+
+  let out = listings.filter(l => !l.sold);
+  if (q) out = out.filter(l => (l.title + ' ' + l.desc + ' ' + l.rank + ' ' + l.sellerName).toLowerCase().indexOf(q) >= 0);
+  if (rank) out = out.filter(l => l.rank === rank);
+  if (maxUsd != null) out = out.filter(l => l.priceUsd <= maxUsd);
+
+  if (sort === 'priceAsc')  out.sort((a,b) => a.priceUsd - b.priceUsd);
+  else if (sort === 'priceDesc') out.sort((a,b) => b.priceUsd - a.priceUsd);
+  else out.sort((a,b) => b.createdAt - a.createdAt);
+  return out;
+}
+
+function renderMarket(){
+  const out = getFiltered();
+  const grid = $('#grid');
+  if (!out.length){
+    grid.innerHTML = '<p class="empty">No hay cuentas que coincidan con tu búsqueda.</p>';
+    return;
+  }
+  grid.innerHTML = out.map(l => {
+    const eq = usdLabel(l.priceUsd);
+    return '<article class="card">' +
+      (l.img
+        ? '<div class="thumb" style="background-image:url(\'' + esc(l.img) + '\')"></div>'
+        : '<div class="thumb ph">🩸</div>') +
+      '<div class="card-body">' +
+        '<div class="badges">' +
+          '<span class="badge ' + esc(l.rank.toLowerCase()) + '">' + esc(l.rank) + '</span>' +
+          '<span class="badge">Nv. ' + esc(l.level) + '</span>' +
+          (l.skins ? '<span class="badge">' + esc(l.skins) + ' skins</span>' : '') +
+        '</div>' +
+        '<h3>' + esc(l.title) + '</h3>' +
+        '<p class="desc">' + esc(l.desc || 'Sin descripción') + '</p>' +
+        '<div class="foot">' +
+          '<div class="price">' + money(l.priceUsd) + (eq ? '<small>' + eq + '</small>' : '') + '</div>' +
+          '<button class="btn primary sm" data-open="' + l.id + '">Ver</button>' +
+        '</div>' +
+      '</div>' +
+    '</article>';
+  }).join('');
+}
+
+/* ================= MODAL DE ANUNCIO ================= */
+function openListing(id){
+  const l = listings.filter(x => x.id === id)[0];
+  if (!l) return;
+  const mine = state.user && l.sellerId === state.user.id;
+  const eq = usdLabel(l.priceUsd);
+
+  $('#modal').innerHTML =
+    '<div class="modal-box">' +
+      '<button class="modal-close" id="mClose">✕</button>' +
+      '<div class="badges" style="margin-bottom:12px">' +
+        '<span class="badge ' + esc(l.rank.toLowerCase()) + '">' + esc(l.rank) + '</span>' +
+        '<span class="badge">Nivel ' + esc(l.level) + '</span>' +
+        (l.skins ? '<span class="badge">' + esc(l.skins) + ' skins</span>' : '') +
+      '</div>' +
+      '<h2 style="font-size:1.25rem;margin-bottom:10px">' + esc(l.title) + '</h2>' +
+      '<p style="color:#a9b6ca;font-size:.88rem;line-height:1.6;margin:0 0 16px">' +
+        esc(l.desc || 'Sin descripción') + '</p>' +
+      '<div class="kv"><span>Precio</span><b>' + money(l.priceUsd) + (eq ? ' <small style="color:#8b95a7">(' + eq + ')</small>' : '') + '</b></div>' +
+      '<div class="kv"><span>Vendedor</span><b>' + esc(l.sellerName) + '</b></div>' +
+      '<div class="kv"><span>Publicado</span><b>' + new Date(l.createdAt).toLocaleDateString('es-ES') + '</b></div>' +
+      '<div style="margin-top:18px" id="mActions"></div>' +
+    '</div>';
+  $('#modal').hidden = false;
+
+  const actions = $('#mActions');
+  if (mine){
+    actions.innerHTML = '<div class="note">Este anuncio es tuyo. Gestiónalo desde <b>Mis ventas</b>.</div>';
+  } else {
+    actions.innerHTML =
+      '<button class="btn primary full" id="mReveal">Contactar al vendedor</button>' +
+      '<div class="note">Pago protegido recomendado: nunca envíes dinero sin intermediario (escrow). ' +
+      'El intercambio de cuentas va contra los Términos de Servicio del juego.</div>';
+    $('#mReveal').onclick = function(){
+      actions.innerHTML =
+        '<div class="note ok"><b>Contacto del vendedor:</b><br>' + esc(l.contact) + '</div>' +
+        '<p style="color:#8b95a7;font-size:.78rem">Menciónale el ID del anuncio: <code>' + esc(l.id) + '</code></p>';
+    };
+  }
+
+  $('#mClose').onclick = closeModal;
+  $('#modal').onclick = e => { if (e.target.id === 'modal') closeModal(); };
+}
+function closeModal(){ $('#modal').hidden = true; $('#modal').innerHTML = ''; }
+
+/* ================= AUTENTICACIÓN ================= */
+function setAuthTab(tab){
+  state.authTab = tab;
+  $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  $('#fldName').hidden = (tab === 'login');
+  $('#aSubmit').textContent = tab === 'login' ? 'Entrar' : 'Crear cuenta y entrar';
+  $('#aErr').textContent = '';
+}
+
+async function handleAuth(e){
+  e.preventDefault();
+  const email = $('#aEmail').value.trim().toLowerCase();
+  const pass  = $('#aPass').value;
+  const name  = $('#aName').value.trim();
+  const err   = $('#aErr');
+  const isReg = state.authTab === 'register';
+  err.textContent = '';
+
+  if (isReg && name.length < 2){ err.textContent = 'Escribe un nombre de usuario.'; return; }
+  if (pass.length < 6){ err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return; }
+
+  const exists = users.filter(u => u.email === email)[0];
+  const hash = await hashPassword(pass);
+
+  if (isReg){
+    if (exists){ err.textContent = 'Ese correo ya está registrado.'; return; }
+    const user = { id: uid(), email: email, name: name, hash: hash, createdAt: Date.now() };
+    users.push(user); saveUsers();
+    state.user = user; store.set(K.SESS, user.id);
+    toast('¡Cuenta creada! Bienvenido, ' + user.name, 'ok');
+  } else {
+    if (!exists || exists.hash !== hash){ err.textContent = 'Correo o contraseña incorrectos.'; return; }
+    state.user = exists; store.set(K.SESS, exists.id);
+    toast('Bienvenido de nuevo, ' + exists.name, 'ok');
+  }
+  $('#formAuth').reset();
+  renderNav();
+  showView('market');
+  renderMarket();
+}
+
+/* ================= PUBLICAR ================= */
+function handlePublish(e){
+  e.preventDefault();
+  const title = $('#pTitle').value.trim();
+  const price = parseFloat($('#pPrice').value);
+  const err = $('#pErr');
+  err.textContent = '';
+
+  if (!title){ err.textContent = 'El título es obligatorio.'; return; }
+  if (!(price > 0)){ err.textContent = 'Ingresa un precio válido.'; return; }
+
+  const priceUsd = +(price / RATES[state.currency]).toFixed(2);
+
+  const listing = {
+    id: uid(),
+    sellerId: state.user.id,
+    sellerName: state.user.name,
+    title: title,
+    desc: $('#pDesc').value.trim(),
+    priceUsd: priceUsd,
+    rank: $('#pRank').value,
+    level: parseInt($('#pLevel').value, 10) || 1,
+    skins: parseInt($('#pSkins').value, 10) || 0,
+    contact: $('#pContact').value.trim(),
+    img: $('#pImg').value.trim(),
+    createdAt: Date.now(),
+    sold: false
+  };
+
+  listings.unshift(listing);
+  saveListings();
+  $('#formPub').reset();
+  toast('Anuncio publicado correctamente', 'ok');
+  showView('market');
+  renderMarket();
+}
+
+/* ================= MIS VENTAS ================= */
+function renderMine(){
+  if (!state.user) return;
+  const mine = listings.filter(l => l.sellerId === state.user.id);
+  const box = $('#mineList');
+
+  if (!mine.length){
+    box.innerHTML = '<p class="empty">Aún no has publicado ninguna cuenta.</p>';
+    return;
+  }
+
+  box.innerHTML = mine.map(l =>
+    '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;' +
+      'background:#131821;border:1px solid #242c3a;border-radius:12px;padding:12px">' +
+      '<div style="flex:1;min-width:180px">' +
+        '<b style="font-size:.92rem">' + esc(l.title) + '</b>' +
+        '<div style="color:#8b95a7;font-size:.78rem;margin-top:3px">' +
+          esc(l.rank) + ' · Nv. ' + esc(l.level) + ' · ' + money(l.priceUsd) +
+          (l.sold ? ' · <span style="color:#22c55e">VENDIDA</span>' : '') +
+        '</div>' +
+      '</div>' +
+      (!l.sold ? '<button class="btn sm" data-sold="' + l.id + '">Marcar vendida</button>' : '') +
+      '<button class="btn sm danger" data-del="' + l.id + '">Eliminar</button>' +
+    '</div>'
+  ).join('');
+}
+
+/* ================= EVENTOS ================= */
+function bind(){
+  // Navegación
+  $$('[data-view]').forEach(el => {
+    el.addEventListener('click', () => showView(el.dataset.view));
+  });
+
+  // Selector de divisa
+  const sel = $('#selCurrency');
+  sel.innerHTML = Object.keys(RATES)
+    .map(c => '<option value="' + c + '">' + CUR[c] + ' ' + c + '</option>').join('');
+  sel.addEventListener('change', function(){
+    state.currency = this.value;
+    store.set(K.CUR, state.currency);
+    $('#fMax').value = '';
+    renderMarket();
+    if (state.view === 'mine') renderMine();
+    if (state.view === 'publish') $('#pubCur').textContent = state.currency;
+    toast('Divisa: ' + state.currency);
+  });
+
+  // Filtros
+  ['#fQ','#fRank','#fSort','#fMax'].forEach(sel2 => {
+    $(sel2).addEventListener('input', renderMarket);
+    $(sel2).addEventListener('change', renderMarket);
+  });
+  $('#fRank').innerHTML = '<option value="">Todos los rangos</option>' +
+    RANKS.map(r => '<option value="' + r + '">' + r + '</option>').join('');
+  $('#pRank').innerHTML = RANKS.map(r => '<option value="' + r + '">' + r + '</option>').join('');
+
+  // Grid (delegación)
+  $('#grid').addEventListener('click', e => {
+    const b = e.target.closest('[data-open]');
+    if (b) openListing(b.dataset.open);
+  });
+
+  // Tabs de auth
+  $$('.tab').forEach(t => t.addEventListener('click', () => setAuthTab(t.dataset.tab)));
+  $('#formAuth').addEventListener('submit', handleAuth);
+
+  // Publicar
+  $('#formPub').addEventListener('submit', handlePublish);
+
+  // Mis ventas (delegación)
+  $('#mineList').addEventListener('click', e => {
+    const d = e.target.closest('[data-del]');
+    const s = e.target.closest('[data-sold]');
+    if (d){
+      if (!confirm('¿Eliminar este anuncio definitivamente?')) return;
+      listings = listings.filter(l => l.id !== d.dataset.del);
+      saveListings(); renderMine(); renderMarket();
+      toast('Anuncio eliminado');
+    }
+    if (s){
+      const l = listings.filter(x => x.id === s.dataset.sold)[0];
+      if (l){ l.sold = true; saveListings(); renderMine(); renderMarket(); toast('Marcada como vendida', 'ok'); }
+    }
+  });
+
+  // ESC cierra el modal
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+}
+
+/* ================= ARRANQUE ================= */
+loadAll();
+bind();
+renderNav();
+setAuthTab('login');
+renderMarket();
+if (!state.user) showView('market');
+
+})();
+</script>
+</body>
+</html>
